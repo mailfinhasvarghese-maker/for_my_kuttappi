@@ -29,7 +29,7 @@
             background: rgba(255, 255, 255, 0.92);
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             text-align: center;
             z-index: 10;
             border: 2px solid #ff4d6d;
@@ -38,9 +38,9 @@
         }
 
         .couple-photo {
-            display: none; /* Hidden until click */
-            width: 180px;
-            height: 180px;
+            display: none;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             object-fit: cover;
             border: 5px solid #ff4d6d;
@@ -62,13 +62,12 @@
             font-size: 80px;
             cursor: pointer;
             display: inline-block;
-            transition: transform 0.3s;
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+            50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
 
@@ -77,7 +76,7 @@
             color: #800f2f;
             font-weight: bold;
             margin-top: 15px;
-            line-height: 1.5;
+            line-height: 1.6;
             font-size: 1.1rem;
         }
 
@@ -104,7 +103,7 @@
         
         <div id="heart-btn" class="heart" onclick="celebrate()">❤️</div>
         
-        <h1 id="main-title">A Message for You</h1>
+        <h1 id="main-title">A Message for You <br> എന്റെ കുട്ടാപ്പി ❤️</h1>
         <p id="sub-text">Tap the heart to open...</p>
         
         <div id="secret-message">
@@ -122,53 +121,65 @@
         canvas.height = window.innerHeight;
 
         let particles = [];
+        let isCelebrating = false;
+
         function createFirework(x, y) {
-            for (let i = 0; i < 60; i++) {
+            const colors = [`hsl(${Math.random() * 360}, 100%, 60%)`, '#ffffff', '#ff4d6d', '#ff0000', '#ffd700'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            for (let i = 0; i < 100; i++) {
                 particles.push({
                     x: x,
                     y: y,
-                    dx: (Math.random() - 0.5) * 10,
-                    dy: (Math.random() - 0.5) * 10,
-                    size: Math.random() * 3 + 1,
-                    color: `hsl(${Math.random() * 360}, 100%, 60%)`,
-                    life: 100
+                    dx: (Math.random() - 0.5) * 15,
+                    dy: (Math.random() - 0.5) * 15,
+                    size: Math.random() * 4 + 1,
+                    color: color,
+                    life: 100,
+                    opacity: 1
                 });
             }
         }
 
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(255, 175, 204, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             particles.forEach((p, i) => {
                 p.x += p.dx;
                 p.y += p.dy;
-                p.dy += 0.12; 
+                p.dy += 0.15;
                 p.life--;
+                p.opacity -= 0.01;
+                
+                ctx.globalAlpha = p.opacity;
                 ctx.fillStyle = p.color;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fill();
-                if (p.life <= 0) particles.splice(i, 1);
+                
+                if (p.life <= 0 || p.opacity <= 0) particles.splice(i, 1);
             });
             requestAnimationFrame(animate);
         }
         animate();
 
         function celebrate() {
+            if(isCelebrating) return;
+            isCelebrating = true;
+
             document.getElementById('main-photo').classList.add('show-image');
             document.getElementById('secret-message').style.display = 'block';
             document.getElementById('heart-btn').style.display = 'none';
-            document.getElementById('main-title').innerText = "I Love You!";
+            document.getElementById('main-title').innerText = "I Love You Forever!";
             document.getElementById('sub-text').style.display = 'none';
 
-            try {
-                document.getElementById('firework-sound').play();
-            } catch(e) { console.log("Audio play blocked"); }
-
-            for(let i=0; i<8; i++) {
-                setTimeout(() => {
-                    createFirework(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7);
-                }, i * 250);
-            }
+            setInterval(() => {
+                createFirework(Math.random() * canvas.width, Math.random() * (canvas.height * 0.7));
+                const sound = document.getElementById('firework-sound');
+                sound.currentTime = 0;
+                sound.play().catch(e => {});
+            }, 600);
         }
 
         document.addEventListener('mousemove', function(e) {
