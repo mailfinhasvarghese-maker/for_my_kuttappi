@@ -16,7 +16,7 @@
             align-items: center;
             height: 100vh;
             width: 100vw;
-            perspective: 2000px;
+            perspective: 2000px; /* Essential for 3D depth */
         }
 
         canvas {
@@ -29,12 +29,12 @@
             z-index: 1;
         }
 
-        /* Initial state of card is hidden for the animation */
+        /* The Main Rectangle Card */
         .card {
-            background: rgba(20, 20, 20, 0.9);
-            padding: 40px 30px;
-            border-radius: 25px;
-            box-shadow: 0 0 50px rgba(255, 77, 109, 0.4);
+            background: rgba(25, 25, 25, 0.85);
+            padding: 50px 30px 40px;
+            border-radius: 30px;
+            box-shadow: 0 0 60px rgba(255, 77, 109, 0.4);
             text-align: center;
             z-index: 10;
             border: 2px solid #ff4d6d;
@@ -42,36 +42,44 @@
             width: 85%;
             backdrop-filter: blur(15px);
             transform-style: preserve-3d;
-            display: none; /* Starts hidden */
+            display: none;
             opacity: 0;
+            /* Constant gentle floating animation */
+            animation: cardFloat 4s ease-in-out infinite alternate;
         }
 
-        /* Beautiful Popup Animation */
+        @keyframes cardFloat {
+            from { transform: translateY(0px) rotateX(0deg); }
+            to { transform: translateY(-15px) rotateX(2deg); }
+        }
+
+        /* The Animated Popup */
         .pop-animation {
             display: block;
-            animation: cardReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: cardReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
+                       cardFloat 4s ease-in-out infinite alternate 1.2s;
         }
 
         @keyframes cardReveal {
-            0% { transform: scale(0) rotateX(-90deg); opacity: 0; }
-            100% { transform: scale(1) rotateX(0deg); opacity: 1; }
+            0% { transform: scale(0) rotateY(90deg) translateZ(-500px); opacity: 0; }
+            100% { transform: scale(1) rotateY(0deg) translateZ(0); opacity: 1; }
         }
 
+        /* The Photo floating OUTSIDE and IN FRONT */
         .couple-photo {
             width: 220px;
             height: 220px;
             border-radius: 50%;
             object-fit: cover;
             border: 6px solid #ff4d6d;
-            margin-bottom: 25px;
-            position: absolute; /* Moves outside card's flow */
+            position: absolute;
             top: -110px;
             left: 50%;
             margin-left: -110px;
             z-index: 50;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            /* Smooth float transition */
-            transition: transform 0.1s ease-out;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            /* This gives it a separate float feel */
+            transition: transform 0.15s ease-out;
             will-change: transform;
             display: none;
         }
@@ -82,12 +90,12 @@
             cursor: pointer;
             display: inline-block;
             animation: pulse 1.5s infinite;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: fixed;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
             z-index: 100;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes pulse {
@@ -96,7 +104,8 @@
             100% { transform: scale(1); }
         }
 
-        h1 { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px;}
+        h1 { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px; font-size: 1.8rem; }
+        
         #secret-message {
             color: #fff;
             margin-top: 20px;
@@ -105,6 +114,7 @@
             text-shadow: 0 0 8px #ff4d6d;
         }
 
+        /* Mouse Heart Trail */
         .trail {
             position: fixed;
             pointer-events: none;
@@ -214,7 +224,7 @@
         }
 
         document.addEventListener('mousemove', function(e) {
-            // Heart trail
+            // Cursor particles
             const h = document.createElement('div');
             h.innerHTML = '❤️';
             h.className = 'trail';
@@ -223,17 +233,15 @@
             document.body.appendChild(h);
             setTimeout(() => { h.remove(); }, 1200);
 
-            // Parallax movement
-            const moveX = (e.clientX - window.innerWidth / 2) / 20;
-            const moveY = (e.clientY - window.innerHeight / 2) / 20;
-
             if(isCelebrating) {
-                // The card tilts slightly
-                card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg)`;
+                const moveX = (e.clientX - window.innerWidth / 2) / 15;
+                const moveY = (e.clientY - window.innerHeight / 2) / 15;
+
+                // Card tilts and drifts slightly
+                card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg) translateZ(0px)`;
                 
-                // The PHOTO floats independently and much more aggressively
-                // translateZ(250px) pushes it way out in front
-                photo.style.transform = `translateZ(250px) translateX(${moveX * 2}px) translateY(${moveY * 2}px) rotate(${moveX * 0.5}deg)`;
+                // Photo floats INDEPENDENTLY and much more aggressively (higher Z-index)
+                photo.style.transform = `translateZ(200px) translateX(${moveX * 2.5}px) translateY(${moveY * 2.5}px) scale(1.1)`;
             }
         });
     </script>
