@@ -7,15 +7,11 @@
     <style>
         body {
             background-color: #000;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             overflow: hidden;
             font-family: 'Arial', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; width: 100vw;
             perspective: 1500px;
         }
 
@@ -62,7 +58,6 @@
             transform-style: preserve-3d;
             display: none;
             opacity: 0;
-            will-change: transform;
         }
 
         .pop-animation {
@@ -88,37 +83,38 @@
             z-index: 50;
             box-shadow: 0 30px 60px rgba(0,0,0,0.9);
             transition: transform 0.1s ease-out;
-            will-change: transform;
             display: none;
         }
 
+        /* Funny Wiggling Heart */
         .heart {
             color: #ff4d6d;
             font-size: clamp(80px, 15vw, 120px);
             cursor: pointer;
             display: inline-block;
-            animation: pulse 1.5s infinite;
             position: fixed;
             left: 50%;
             top: 55%;
             transform: translate(-50%, -50%);
             z-index: 100;
+            /* Funny jump transition */
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: funnyPulse 1s infinite alternate;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
+        @keyframes funnyPulse {
+            0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
         }
 
         #title-msg { color: #fff; margin-top: 80px; font-size: clamp(1.4rem, 4vw, 2rem); }
         #secret-message { color: #eee; margin-top: 20px; line-height: 1.6; font-size: 1.1rem; }
 
-        /* RED Cursor Trail */
         .trail {
             position: fixed;
             pointer-events: none;
-            color: #ff4d6d; /* Back to RED */
+            color: #ff4d6d;
             z-index: 9999;
             font-size: 40px !important;
             animation: floatAway 1.2s ease-out forwards;
@@ -175,25 +171,29 @@
 
         function handleHeartClick() {
             clickCount++;
+            
+            // Add a temporary "oops" shake effect
+            heartBtn.style.animation = 'none';
+            setTimeout(() => heartBtn.style.animation = 'funnyPulse 0.3s infinite alternate', 10);
+
             if (clickCount < 5) {
-                const x = Math.random() * (window.innerWidth - 150) + 75;
-                const y = Math.random() * (window.innerHeight - 150) + 75;
-                heartBtn.style.left = x + 'px';
-                heartBtn.style.top = y + 'px';
-                heartBtn.style.transform = 'translate(-50%, -50%)';
+                // Generate funny random coordinates
+                const padding = 100;
+                const newX = Math.random() * (window.innerWidth - padding * 2) + padding;
+                const newY = Math.random() * (window.innerHeight - padding * 2) + padding;
+                
+                heartBtn.style.left = newX + 'px';
+                heartBtn.style.top = newY + 'px';
             } else {
                 celebrate();
             }
         }
 
-        // Optimized White Heart Class
         class WhiteHeart {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); this.y = Math.random() * canvas.height; }
             reset() {
                 this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height; // Spread them initially
+                this.y = canvas.height + 50;
                 this.size = Math.random() * 12 + 8;
                 this.speed = Math.random() * 1.5 + 0.5;
                 this.drift = (Math.random() - 0.5) * 0.8;
@@ -202,10 +202,7 @@
             update() {
                 this.y -= this.speed;
                 this.x += this.drift;
-                if (this.y < -50) {
-                    this.y = canvas.height + 50;
-                    this.x = Math.random() * canvas.width;
-                }
+                if (this.y < -50) this.reset();
             }
             draw() {
                 ctx.globalAlpha = this.opacity;
@@ -218,10 +215,7 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if(isCelebrating) {
-                hearts.forEach(h => {
-                    h.update();
-                    h.draw();
-                });
+                hearts.forEach(h => { h.update(); h.draw(); });
             }
             requestAnimationFrame(animate);
         }
@@ -237,14 +231,9 @@
             photo.style.display = 'block';
             music.volume = 0.8;
             music.play();
-
-            // HEAVY HEART COUNT: 100 hearts for a full effect
-            for(let i=0; i<100; i++) {
-                hearts.push(new WhiteHeart());
-            }
+            for(let i=0; i<100; i++) hearts.push(new WhiteHeart());
         }
 
-        // Motion & Parallax Logic
         function updateMotion(x, y) {
             if(!isCelebrating) return;
             card.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
@@ -252,7 +241,6 @@
         }
 
         document.addEventListener('mousemove', (e) => {
-            // RED Heart cursor trail
             const h = document.createElement('div');
             h.innerHTML = '❤️'; h.className = 'trail';
             h.style.left = e.clientX - 20 + 'px'; h.style.top = e.clientY - 20 + 'px';
