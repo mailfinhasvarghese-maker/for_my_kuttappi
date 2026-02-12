@@ -29,8 +29,9 @@
             z-index: 1;
         }
 
+        /* Initial state of card is hidden for the animation */
         .card {
-            background: rgba(20, 20, 20, 0.85);
+            background: rgba(20, 20, 20, 0.9);
             padding: 40px 30px;
             border-radius: 25px;
             box-shadow: 0 0 50px rgba(255, 77, 109, 0.4);
@@ -41,32 +42,38 @@
             width: 85%;
             backdrop-filter: blur(15px);
             transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
+            display: none; /* Starts hidden */
+            opacity: 0;
+        }
+
+        /* Beautiful Popup Animation */
+        .pop-animation {
+            display: block;
+            animation: cardReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes cardReveal {
+            0% { transform: scale(0) rotateX(-90deg); opacity: 0; }
+            100% { transform: scale(1) rotateX(0deg); opacity: 1; }
         }
 
         .couple-photo {
-            display: none;
             width: 220px;
             height: 220px;
             border-radius: 50%;
             object-fit: cover;
             border: 6px solid #ff4d6d;
             margin-bottom: 25px;
-            position: relative;
+            position: absolute; /* Moves outside card's flow */
+            top: -110px;
+            left: 50%;
+            margin-left: -110px;
             z-index: 50;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            /* Smooth float transition */
             transition: transform 0.1s ease-out;
             will-change: transform;
-        }
-
-        .show-image {
-            display: inline-block;
-            animation: popIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0) translateZ(0); opacity: 0; }
-            100% { transform: scale(1.1) translateZ(180px); opacity: 1; }
+            display: none;
         }
 
         .heart {
@@ -76,11 +83,10 @@
             display: inline-block;
             animation: pulse 1.5s infinite;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: fixed; /* Allows it to move anywhere on screen */
+            position: fixed;
             left: 50%;
             top: 50%;
-            margin-left: -55px; /* Centers the 110px heart */
-            margin-top: -55px;
+            transform: translate(-50%, -50%);
             z-index: 100;
         }
 
@@ -90,13 +96,10 @@
             100% { transform: scale(1); }
         }
 
-        h1 { color: #fff; text-shadow: 0 0 10px #ff4d6d; pointer-events: none; }
-        p { color: #ffafcc; pointer-events: none; }
-
+        h1 { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px;}
         #secret-message {
-            display: none;
             color: #fff;
-            margin-top: 25px;
+            margin-top: 20px;
             line-height: 1.6;
             font-size: 1.2rem;
             text-shadow: 0 0 8px #ff4d6d;
@@ -123,11 +126,8 @@
     <audio id="bg-music" src="firework.mp3" preload="auto" loop></audio>
 
     <div class="card" id="main-card">
-        <h1 id="main-title">എന്റെ കുട്ടാപ്പി ❤️</h1>
-        <p id="sub-text">ക്ലിക്ക് ചെയ്യൂ... (Click the heart!)</p>
-        
         <img id="main-photo" src="https://i.ibb.co/B5n35GZQ/Whats-App-Image-2026-02-11-at-2-12-29-PM.jpg" class="couple-photo" alt="Us">
-        
+        <h1 id="title-msg">I Love You Forever!</h1>
         <div id="secret-message">
             എന്റെ ചക്കരയാട്ടോ ❤️.....<br>
             Happy Valentines Day Dear. <br><br>
@@ -146,7 +146,6 @@
         const music = document.getElementById('bg-music');
         
         let clickCount = 0;
-        const requiredClicks = 5;
         let isCelebrating = false;
 
         function resize() {
@@ -158,25 +157,18 @@
 
         function handleHeartClick() {
             clickCount++;
-
-            if (clickCount < requiredClicks) {
-                // Move heart to a random spot on the screen
-                const padding = 100;
-                const newX = Math.random() * (window.innerWidth - padding * 2) + padding;
-                const newY = Math.random() * (window.innerHeight - padding * 2) + padding;
-                
-                heartBtn.style.left = newX + 'px';
-                heartBtn.style.top = newY + 'px';
-                heartBtn.style.marginLeft = '0';
-                heartBtn.style.marginTop = '0';
+            if (clickCount < 5) {
+                const x = Math.random() * (window.innerWidth - 150) + 75;
+                const y = Math.random() * (window.innerHeight - 150) + 75;
+                heartBtn.style.left = x + 'px';
+                heartBtn.style.top = y + 'px';
+                heartBtn.style.transform = 'translate(-50%, -50%)';
             } else {
-                // FINAL CLICK: Open the surprise
                 celebrate();
             }
         }
 
         let particles = [];
-
         function createFirework(x, y) {
             const hue = Math.random() * 360;
             for (let i = 0; i < 120; i++) {
@@ -209,14 +201,9 @@
             if(isCelebrating) return;
             isCelebrating = true;
 
-            // Put heart back and hide it
             heartBtn.style.display = 'none';
-            
-            // Show content
-            photo.classList.add('show-image');
-            document.getElementById('secret-message').style.display = 'block';
-            document.getElementById('main-title').innerText = "I Love You Forever!";
-            document.getElementById('sub-text').style.display = 'none';
+            card.classList.add('pop-animation');
+            photo.style.display = 'block';
             
             music.volume = 0.8;
             music.play();
@@ -227,6 +214,7 @@
         }
 
         document.addEventListener('mousemove', function(e) {
+            // Heart trail
             const h = document.createElement('div');
             h.innerHTML = '❤️';
             h.className = 'trail';
@@ -235,15 +223,17 @@
             document.body.appendChild(h);
             setTimeout(() => { h.remove(); }, 1200);
 
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            const moveX = (e.clientX - centerX) / 10;
-            const moveY = (e.clientY - centerY) / 10;
-
-            card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg)`;
+            // Parallax movement
+            const moveX = (e.clientX - window.innerWidth / 2) / 20;
+            const moveY = (e.clientY - window.innerHeight / 2) / 20;
 
             if(isCelebrating) {
-                photo.style.transform = `translateZ(180px) translateX(${moveX * 1.5}px) translateY(${moveY * 1.5}px)`;
+                // The card tilts slightly
+                card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg)`;
+                
+                // The PHOTO floats independently and much more aggressively
+                // translateZ(250px) pushes it way out in front
+                photo.style.transform = `translateZ(250px) translateX(${moveX * 2}px) translateY(${moveY * 2}px) rotate(${moveX * 0.5}deg)`;
             }
         });
     </script>
