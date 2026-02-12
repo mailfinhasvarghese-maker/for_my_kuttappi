@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
             align-items: center;
             height: 100vh;
             width: 100vw;
-            perspective: 2000px; /* Essential for 3D depth */
+            perspective: 2000px;
         }
 
         canvas {
@@ -29,7 +29,29 @@
             z-index: 1;
         }
 
-        /* The Main Rectangle Card */
+        /* തുടക്കത്തിലെ വരികൾ */
+        #intro-text {
+            position: fixed;
+            top: 20%;
+            text-align: center;
+            width: 100%;
+            z-index: 80;
+            transition: opacity 0.5s ease;
+        }
+
+        #intro-text h1 {
+            color: #fff;
+            font-size: 2.2rem;
+            text-shadow: 0 0 15px #ff4d6d;
+            margin-bottom: 10px;
+        }
+
+        #intro-text p {
+            color: #ffafcc;
+            font-size: 1.2rem;
+        }
+
+        /* സർപ്രൈസ് കാർഡ് */
         .card {
             background: rgba(25, 25, 25, 0.85);
             padding: 50px 30px 40px;
@@ -44,16 +66,8 @@
             transform-style: preserve-3d;
             display: none;
             opacity: 0;
-            /* Constant gentle floating animation */
-            animation: cardFloat 4s ease-in-out infinite alternate;
         }
 
-        @keyframes cardFloat {
-            from { transform: translateY(0px) rotateX(0deg); }
-            to { transform: translateY(-15px) rotateX(2deg); }
-        }
-
-        /* The Animated Popup */
         .pop-animation {
             display: block;
             animation: cardReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
@@ -65,7 +79,12 @@
             100% { transform: scale(1) rotateY(0deg) translateZ(0); opacity: 1; }
         }
 
-        /* The Photo floating OUTSIDE and IN FRONT */
+        @keyframes cardFloat {
+            from { transform: translateY(0px) rotateX(0deg); }
+            to { transform: translateY(-15px) rotateX(2deg); }
+        }
+
+        /* ഫോട്ടോ */
         .couple-photo {
             width: 220px;
             height: 220px;
@@ -78,7 +97,6 @@
             margin-left: -110px;
             z-index: 50;
             box-shadow: 0 30px 60px rgba(0,0,0,0.9);
-            /* This gives it a separate float feel */
             transition: transform 0.15s ease-out;
             will-change: transform;
             display: none;
@@ -92,7 +110,7 @@
             animation: pulse 1.5s infinite;
             position: fixed;
             left: 50%;
-            top: 50%;
+            top: 55%;
             transform: translate(-50%, -50%);
             z-index: 100;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -104,17 +122,9 @@
             100% { transform: scale(1); }
         }
 
-        h1 { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px; font-size: 1.8rem; }
-        
-        #secret-message {
-            color: #fff;
-            margin-top: 20px;
-            line-height: 1.6;
-            font-size: 1.2rem;
-            text-shadow: 0 0 8px #ff4d6d;
-        }
+        #title-msg { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px; font-size: 1.8rem; }
+        #secret-message { color: #fff; margin-top: 20px; line-height: 1.6; font-size: 1.2rem; text-shadow: 0 0 8px #ff4d6d; }
 
-        /* Mouse Heart Trail */
         .trail {
             position: fixed;
             pointer-events: none;
@@ -135,6 +145,11 @@
     <canvas id="canvas"></canvas>
     <audio id="bg-music" src="firework.mp3" preload="auto" loop></audio>
 
+    <div id="intro-text">
+        <h1>എന്റെ കുട്ടാപ്പിക്ക്‌ ❤️</h1>
+        <p>ഈ ❤️ ചിഹ്നത്തിലൊന്ന് ക്ലിക്കിക്കോളൂ...</p>
+    </div>
+
     <div class="card" id="main-card">
         <img id="main-photo" src="https://i.ibb.co/B5n35GZQ/Whats-App-Image-2026-02-11-at-2-12-29-PM.jpg" class="couple-photo" alt="Us">
         <h1 id="title-msg">I Love You Forever!</h1>
@@ -153,6 +168,7 @@
         const photo = document.getElementById('main-photo');
         const card = document.getElementById('main-card');
         const heartBtn = document.getElementById('heart-btn');
+        const introText = document.getElementById('intro-text');
         const music = document.getElementById('bg-music');
         
         let clickCount = 0;
@@ -212,6 +228,9 @@
             isCelebrating = true;
 
             heartBtn.style.display = 'none';
+            introText.style.opacity = '0'; // ടെക്സ്റ്റ് മാറ്റുന്നു
+            setTimeout(() => introText.style.display = 'none', 500);
+
             card.classList.add('pop-animation');
             photo.style.display = 'block';
             
@@ -224,7 +243,6 @@
         }
 
         document.addEventListener('mousemove', function(e) {
-            // Cursor particles
             const h = document.createElement('div');
             h.innerHTML = '❤️';
             h.className = 'trail';
@@ -236,11 +254,7 @@
             if(isCelebrating) {
                 const moveX = (e.clientX - window.innerWidth / 2) / 15;
                 const moveY = (e.clientY - window.innerHeight / 2) / 15;
-
-                // Card tilts and drifts slightly
-                card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg) translateZ(0px)`;
-                
-                // Photo floats INDEPENDENTLY and much more aggressively (higher Z-index)
+                card.style.transform = `rotateY(${moveX}deg) rotateX(${-moveY}deg)`;
                 photo.style.transform = `translateZ(200px) translateX(${moveX * 2.5}px) translateY(${moveY * 2.5}px) scale(1.1)`;
             }
         });
