@@ -15,6 +15,7 @@
             align-items: center;
             height: 100vh;
             cursor: crosshair;
+            perspective: 1000px;
         }
 
         canvas {
@@ -35,6 +36,8 @@
             border: 2px solid #ff4d6d;
             max-width: 380px;
             width: 90%;
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
         }
 
         .couple-photo {
@@ -45,6 +48,8 @@
             object-fit: cover;
             border: 5px solid #ff4d6d;
             margin-bottom: 20px;
+            transition: transform 0.2s ease-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .show-image {
@@ -53,8 +58,8 @@
         }
 
         @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { transform: scale(0) translateZ(0); opacity: 0; }
+            100% { transform: scale(1) translateZ(50px); opacity: 1; }
         }
 
         .heart {
@@ -96,9 +101,9 @@
 <body>
 
     <canvas id="canvas"></canvas>
-    <audio id="firework-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="firework-sound" src="https://www.soundjay.com/misc/sounds/firework-show-01.mp3"></audio>
 
-    <div class="card">
+    <div class="card" id="main-card">
         <img id="main-photo" src="https://i.ibb.co/B5n35GZQ/Whats-App-Image-2026-02-11-at-2-12-29-PM.jpg" class="couple-photo" alt="Us">
         
         <div id="heart-btn" class="heart" onclick="celebrate()">❤️</div>
@@ -117,6 +122,10 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const photo = document.getElementById('main-photo');
+        const card = document.getElementById('main-card');
+        const sound = document.getElementById('firework-sound');
+        
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -124,15 +133,12 @@
         let isCelebrating = false;
 
         function createFirework(x, y) {
-            const colors = [`hsl(${Math.random() * 360}, 100%, 60%)`, '#ffffff', '#ff4d6d', '#ff0000', '#ffd700'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            
-            for (let i = 0; i < 100; i++) {
+            const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+            for (let i = 0; i < 120; i++) {
                 particles.push({
-                    x: x,
-                    y: y,
-                    dx: (Math.random() - 0.5) * 15,
-                    dy: (Math.random() - 0.5) * 15,
+                    x: x, y: y,
+                    dx: (Math.random() - 0.5) * 18,
+                    dy: (Math.random() - 0.5) * 18,
                     size: Math.random() * 4 + 1,
                     color: color,
                     life: 100,
@@ -144,20 +150,11 @@
         function animate() {
             ctx.fillStyle = 'rgba(255, 175, 204, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
             particles.forEach((p, i) => {
-                p.x += p.dx;
-                p.y += p.dy;
-                p.dy += 0.15;
-                p.life--;
-                p.opacity -= 0.01;
-                
+                p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.life--; p.opacity -= 0.01;
                 ctx.globalAlpha = p.opacity;
                 ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                 if (p.life <= 0 || p.opacity <= 0) particles.splice(i, 1);
             });
             requestAnimationFrame(animate);
@@ -167,22 +164,29 @@
         function celebrate() {
             if(isCelebrating) return;
             isCelebrating = true;
-
-            document.getElementById('main-photo').classList.add('show-image');
+            
+            photo.classList.add('show-image');
             document.getElementById('secret-message').style.display = 'block';
             document.getElementById('heart-btn').style.display = 'none';
             document.getElementById('main-title').innerText = "I Love You Forever!";
             document.getElementById('sub-text').style.display = 'none';
 
+            // Initial Burst
+            createFirework(canvas.width/2, canvas.height/2);
+            sound.play();
+
+            // Continuous Loop
             setInterval(() => {
                 createFirework(Math.random() * canvas.width, Math.random() * (canvas.height * 0.7));
-                const sound = document.getElementById('firework-sound');
-                sound.currentTime = 0;
-                sound.play().catch(e => {});
-            }, 600);
+                // Reset and play sound for each major explosion
+                const clone = sound.cloneNode();
+                clone.volume = 0.5;
+                clone.play();
+            }, 800);
         }
 
         document.addEventListener('mousemove', function(e) {
+            // Heart cursor effect
             const heart = document.createElement('div');
             heart.innerHTML = '❤️';
             heart.className = 'trail';
@@ -191,6 +195,15 @@
             heart.style.fontSize = Math.random() * 15 + 10 + 'px';
             document.body.appendChild(heart);
             setTimeout(() => { heart.remove(); }, 1000);
+
+            // Floating Parallax Movement
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 20;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 20;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            
+            if(isCelebrating) {
+                photo.style.transform = `translateX(${xAxis * -1.5}px) translateY(${yAxis * -1.5}px) translateZ(50px)`;
+            }
         });
     </script>
 </body>
