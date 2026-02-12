@@ -27,7 +27,6 @@
             z-index: 1;
         }
 
-        /* Responsive Intro Text */
         #intro-text {
             position: fixed;
             top: 15%;
@@ -39,7 +38,7 @@
 
         #intro-text h1 {
             color: #fff;
-            font-size: clamp(1.8rem, 5vw, 3rem); /* Grows on Desktop */
+            font-size: clamp(1.8rem, 5vw, 3rem);
             text-shadow: 0 0 15px #ff4d6d;
             margin-bottom: 10px;
             padding: 0 10px;
@@ -50,16 +49,15 @@
             font-size: clamp(1rem, 3vw, 1.5rem);
         }
 
-        /* The Main Rectangle Card */
         .card {
             background: rgba(25, 25, 25, 0.85);
             padding: 50px 30px 40px;
             border-radius: 30px;
-            box-shadow: 0 0 60px rgba(255, 77, 109, 0.4);
+            box-shadow: 0 0 60px rgba(255, 77, 109, 0.3);
             text-align: center;
             z-index: 10;
-            border: 2px solid #ff4d6d;
-            max-width: 400px; /* Wider for Desktop */
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
             width: 85%;
             backdrop-filter: blur(15px);
             transform-style: preserve-3d;
@@ -78,13 +76,12 @@
             100% { transform: scale(1) rotateY(0deg) translateZ(0); opacity: 1; }
         }
 
-        /* Floating Photo */
         .couple-photo {
-            width: clamp(180px, 40vw, 250px); /* Larger on Desktop */
+            width: clamp(180px, 40vw, 250px);
             height: clamp(180px, 40vw, 250px);
             border-radius: 50%;
             object-fit: cover;
-            border: 6px solid #ff4d6d;
+            border: 6px solid #fff;
             position: absolute;
             top: -125px;
             left: 50%;
@@ -116,13 +113,13 @@
             100% { transform: scale(1); }
         }
 
-        #title-msg { color: #fff; text-shadow: 0 0 10px #ff4d6d; margin-top: 80px; font-size: clamp(1.4rem, 4vw, 2rem); }
-        #secret-message { color: #fff; margin-top: 20px; line-height: 1.6; font-size: 1.1rem; text-shadow: 0 0 8px #ff4d6d; }
+        #title-msg { color: #fff; margin-top: 80px; font-size: clamp(1.4rem, 4vw, 2rem); }
+        #secret-message { color: #eee; margin-top: 20px; line-height: 1.6; font-size: 1.1rem; }
 
         .trail {
             position: fixed;
             pointer-events: none;
-            color: #ff4d6d;
+            color: rgba(255, 255, 255, 0.8);
             z-index: 9999;
             font-size: 40px !important;
             animation: floatAway 1.2s ease-out forwards;
@@ -167,6 +164,7 @@
         
         let clickCount = 0;
         let isCelebrating = false;
+        let hearts = [];
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -188,32 +186,40 @@
             }
         }
 
-        // Firework Engine
-        let particles = [];
-        function createFirework(x, y) {
-            const hue = Math.random() * 360;
-            for (let i = 0; i < 100; i++) {
-                particles.push({
-                    x: x, y: y,
-                    dx: (Math.random() - 0.5) * 18,
-                    dy: (Math.random() - 0.5) * 18,
-                    size: Math.random() * 3 + 1,
-                    color: `hsl(${hue}, 100%, 60%)`,
-                    life: 100, opacity: 1
-                });
+        // White Heart Particle Logic
+        class WhiteHeart {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 50;
+                this.size = Math.random() * 15 + 10;
+                this.speed = Math.random() * 2 + 1;
+                this.drift = (Math.random() - 0.5) * 1;
+                this.opacity = Math.random() * 0.5 + 0.3;
+            }
+            update() {
+                this.y -= this.speed;
+                this.x += this.drift;
+                if (this.y < -50) this.reset();
+            }
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = "white";
+                ctx.font = `${this.size}px serif`;
+                ctx.fillText("🤍", this.x, this.y);
             }
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p, i) => {
-                p.x += p.dx; p.y += p.dy; p.dy += 0.12; p.life--; p.opacity -= 0.01;
-                ctx.globalAlpha = p.opacity;
-                ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-                if (p.life <= 0 || p.opacity <= 0) particles.splice(i, 1);
-            });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(isCelebrating) {
+                hearts.forEach(h => {
+                    h.update();
+                    h.draw();
+                });
+            }
             requestAnimationFrame(animate);
         }
         animate();
@@ -228,25 +234,23 @@
             photo.style.display = 'block';
             music.volume = 0.8;
             music.play();
-            setInterval(() => {
-                createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.7);
-            }, 800);
+
+            // Initialize white hearts
+            for(let i=0; i<40; i++) {
+                hearts.push(new WhiteHeart());
+            }
         }
 
-        // --- MOTION LOGIC ---
-
+        // MOTION LOGIC (Desktop & Mobile)
         function updateMotion(x, y) {
             if(!isCelebrating) return;
-            // Card Tilt
             card.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
-            // Independent Photo Motion (Parallax)
-            photo.style.transform = `translateZ(180px) translateX(${x * 1.8}px) translateY(${y * 1.8}px)`;
+            photo.style.transform = `translateZ(180px) translateX(${x * 2}px) translateY(${y * 2}px)`;
         }
 
-        // Mouse Motion (Desktop)
         document.addEventListener('mousemove', (e) => {
             const h = document.createElement('div');
-            h.innerHTML = '❤️'; h.className = 'trail';
+            h.innerHTML = '🤍'; h.className = 'trail';
             h.style.left = e.clientX - 20 + 'px'; h.style.top = e.clientY - 20 + 'px';
             document.body.appendChild(h);
             setTimeout(() => h.remove(), 1000);
@@ -256,13 +260,10 @@
             updateMotion(mx, my);
         });
 
-        // Tilt Motion (Mobile)
         window.addEventListener('deviceorientation', (e) => {
             if (e.beta === null || e.gamma === null) return;
-            // Gamma is left/right tilt (-90 to 90)
-            // Beta is front/back tilt (-180 to 180)
             const tiltX = e.gamma / 2.5; 
-            const tiltY = (e.beta - 45) / 2.5; // Adjusted for natural holding angle
+            const tiltY = (e.beta - 45) / 2.5;
             updateMotion(tiltX, tiltY);
         });
     </script>
