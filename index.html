@@ -17,6 +17,14 @@
             cursor: crosshair;
         }
 
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
         .card {
             background: rgba(255, 255, 255, 0.9);
             padding: 30px;
@@ -26,26 +34,33 @@
             z-index: 10;
             border: 2px solid #ff4d6d;
             max-width: 350px;
-            animation: fadeIn 2s ease-in;
         }
 
+        /* Image starts hidden */
         .couple-photo {
+            display: none;
             width: 180px;
             height: 180px;
             border-radius: 50%;
             object-fit: cover;
             border: 5px solid #ff4d6d;
             margin-bottom: 20px;
-            transition: transform 0.5s;
         }
 
-        .couple-photo:hover {
-            transform: scale(1.05) rotate(3deg);
+        /* Pop-in animation */
+        .show-image {
+            display: inline-block;
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .heart {
             color: #ff4d6d;
-            font-size: 60px;
+            font-size: 80px;
             cursor: pointer;
             display: inline-block;
             transition: transform 0.3s;
@@ -54,7 +69,7 @@
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.15); }
             100% { transform: scale(1); }
         }
 
@@ -64,18 +79,6 @@
             font-weight: bold;
             margin-top: 15px;
             font-style: italic;
-            line-height: 1.4;
-            animation: slideUp 0.8s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .trail {
@@ -83,7 +86,7 @@
             pointer-events: none;
             color: #ff4d6d;
             animation: floatAway 1s linear forwards;
-            z-index: 1;
+            z-index: 100;
         }
 
         @keyframes floatAway {
@@ -93,48 +96,93 @@
 </head>
 <body>
 
+    <canvas id="canvas"></canvas>
+
+    <audio id="firework-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
     <div class="card">
-        <img src="https://i.ibb.co/B5n35GZQ/Whats-App-Image-2026-02-11-at-2-12-29-PM.jpg" class="couple-photo" alt="Us">
+        <img id="main-photo" src="https://i.ibb.co/B5n35GZQ/Whats-App-Image-2026-02-11-at-2-12-29-PM.jpg" class="couple-photo" alt="Us">
         
-        <div class="heart" onclick="revealSecret()">❤️</div>
+        <div id="heart-btn" class="heart" onclick="celebrate()">❤️</div>
         
-        <h1 id="main-title">For My Kuttappi</h1>
-        <p id="sub-text">I have a secret for you... Tap the heart!</p>
+        <h1 id="main-title">A Special Message</h1>
+        <p id="sub-text">Tap the heart to open...</p>
         
         <div id="secret-message">
-            "You are the best thing that ever happened to me. Every day with you feels like a gift. I built this just for you because you deserve the world! I love you! ❤️"
+            "You make my world sparkle! Happy Valentine's Day! ❤️"
         </div>
     </div>
 
     <script>
-        function revealSecret() {
-            const secret = document.getElementById('secret-message');
-            secret.style.display = 'block';
-            document.getElementById('main-title').innerText = "I Love You!";
-            document.getElementById('sub-text').style.display = 'none';
-            
-            // Celebration burst
-            for(let i=0; i<15; i++) {
-                setTimeout(() => {
-                    createHeart(window.innerWidth/2 + (Math.random() - 0.5) * 200, window.innerHeight/2 + (Math.random() - 0.5) * 200);
-                }, i * 100);
+        // 1. Fireworks Logic
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        function createFirework(x, y) {
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    dx: (Math.random() - 0.5) * 8,
+                    dy: (Math.random() - 0.5) * 8,
+                    size: Math.random() * 3 + 1,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    life: 100
+                });
             }
         }
 
-        document.addEventListener('mousemove', function(e) {
-            createHeart(e.pageX, e.pageY);
-        });
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.dy += 0.1; // Gravity
+                p.life--;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
 
-        function createHeart(x, y) {
+        // 2. The Celebration Click
+        function celebrate() {
+            // Show Image and Message
+            document.getElementById('main-photo').classList.add('show-image');
+            document.getElementById('secret-message').style.display = 'block';
+            document.getElementById('heart-btn').style.animation = 'none';
+            document.getElementById('main-title').innerText = "Happy Valentine's Day!";
+            document.getElementById('sub-text').style.display = 'none';
+
+            // Play Sound
+            document.getElementById('firework-sound').play();
+
+            // Fireworks burst
+            for(let i=0; i<5; i++) {
+                setTimeout(() => {
+                    createFirework(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+                }, i * 300);
+            }
+        }
+
+        // 3. Mouse Trail (Same as before)
+        document.addEventListener('mousemove', function(e) {
             const heart = document.createElement('div');
             heart.innerHTML = '❤️';
             heart.className = 'trail';
-            heart.style.left = x + 'px';
-            heart.style.top = y + 'px';
+            heart.style.left = e.pageX + 'px';
+            heart.style.top = e.pageY + 'px';
             heart.style.fontSize = Math.random() * 15 + 10 + 'px';
             document.body.appendChild(heart);
             setTimeout(() => { heart.remove(); }, 1000);
-        }
+        });
     </script>
 </body>
 </html>
